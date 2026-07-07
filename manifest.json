@@ -1,0 +1,15 @@
+{
+  "name": "戒色护航 · 分阶戒色系统",
+  "short_name": "戒色护航",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2b7bd6",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%232b7bd6'/%3E%3Ctext x='50' y='70' font-size='60' text-anchor='middle' fill='white'%3E🛡%3C/text%3E%3C/svg%3E",
+      "sizes": "100x100",
+      "type": "image/svg+xml"
+    }
+  ]
+}
