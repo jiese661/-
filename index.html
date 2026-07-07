@@ -75,6 +75,38 @@
     .tab.active { background: #2b7bd6; color: white; }
     .section { display: none; }
     .section.active { display: block; }
+    
+    /* 可折叠的阶段标题 */
+    .phase-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: #f0f4fc;
+      padding: 12px 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      margin-bottom: 10px;
+      font-weight: 600;
+      color: #1e3c72;
+      user-select: none;
+    }
+    .phase-header .arrow {
+      font-size: 14px;
+      transition: transform 0.3s;
+    }
+    .phase-header.collapsed .arrow {
+      transform: rotate(-90deg);
+    }
+    
+    /* 任务内容区域，默认显示 */
+    .task-body {
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+    .task-body.collapsed {
+      display: none;
+    }
+    
     .task-list {
       background: #f8fafd; border-radius: 16px; padding: 16px;
       margin-bottom: 15px;
@@ -184,17 +216,24 @@
     </div>
 
     <div id="tasksSection" class="section active">
-      <div id="phaseTitle" style="font-weight:600; margin-bottom:10px; color:#1e3c72;"></div>
-      <div class="task-list" id="taskList"></div>
-      <button class="btn" id="completeDayBtn">✅ 完成今日所有任务，打卡</button>
-      <button class="btn danger" id="resetBtn">😞 我破戒了，重置进度</button>
-      <p style="text-align:center; margin-top:10px; color:#888; font-size:13px;">
-        已连续打卡 <span id="streakDays">0</span> 天
-      </p>
-      <!-- 实时时间显示 -->
-      <div class="clock-display" id="clockDisplay">
-        <div class="date" id="dateText"></div>
-        <div class="time" id="timeText"></div>
+      <!-- 可折叠的阶段标题 -->
+      <div class="phase-header" id="phaseHeader">
+        <span id="phaseTitle" style="font-weight:600; color:#1e3c72;"></span>
+        <span class="arrow">▼</span>
+      </div>
+      
+      <!-- 任务内容区域，可折叠 -->
+      <div class="task-body" id="taskBody">
+        <div class="task-list" id="taskList"></div>
+        <button class="btn" id="completeDayBtn">✅ 完成今日所有任务，打卡</button>
+        <button class="btn danger" id="resetBtn">😞 我破戒了，重置进度</button>
+        <p style="text-align:center; margin-top:10px; color:#888; font-size:13px;">
+          已连续打卡 <span id="streakDays">0</span> 天
+        </p>
+        <div class="clock-display" id="clockDisplay">
+          <div class="date" id="dateText"></div>
+          <div class="time" id="timeText"></div>
+        </div>
       </div>
     </div>
 
@@ -295,6 +334,15 @@
   let lastCheckinDate = localStorage.getItem('last_checkin_date') || '';
   let clickGameCount = 0;
 
+  // ========== 折叠功能 ==========
+  const phaseHeader = document.getElementById('phaseHeader');
+  const taskBody = document.getElementById('taskBody');
+  
+  phaseHeader.addEventListener('click', () => {
+    phaseHeader.classList.toggle('collapsed');
+    taskBody.classList.toggle('collapsed');
+  });
+
   // ========== 实时时钟 ==========
   function updateClock() {
     const now = new Date();
@@ -309,9 +357,8 @@
     document.getElementById('timeText').textContent = `${hours}:${minutes}:${seconds}`;
   }
   setInterval(updateClock, 1000);
-  updateClock(); // 立即执行一次
+  updateClock();
 
-  // ========== 获取今天的日期字符串（用于比对） ==========
   function getTodayString() {
     const now = new Date();
     const year = now.getFullYear();
@@ -397,7 +444,6 @@
       checkbox.checked = isChecked;
       if (!isChecked) allTodayTasksCompleted = false;
 
-      // 如果已经完成，或者今天已经打过卡，复选框禁用
       if (isChecked || lastCheckinDate === today) {
         checkbox.disabled = true;
       }
@@ -411,7 +457,6 @@
     });
 
     const completeBtn = document.getElementById('completeDayBtn');
-    // 如果所有任务已完成 或 今天已经打过卡，按钮禁用
     if (allTodayTasksCompleted || lastCheckinDate === today) {
       completeBtn.disabled = true;
       completeBtn.textContent = '✅ 今日已完成，明天继续加油';
@@ -435,13 +480,11 @@
     }
 
     const today = getTodayString();
-    // 关键：检查今天是否已经打过卡
     if (lastCheckinDate === today) {
       alert('你今天已经打过卡了，明天再来吧！');
       return;
     }
 
-    // 双重检查任务完成状态
     let alreadyCompletedToday = true;
     checkboxes.forEach((cb, index) => {
       if (!completedDays.includes(`${currentDay}_${index}`)) {
@@ -454,7 +497,6 @@
       return;
     }
 
-    // 保存任务完成记录
     checkboxes.forEach((cb, index) => {
       const key = `${currentDay}_${index}`;
       if (!completedDays.includes(key)) {
@@ -463,11 +505,9 @@
     });
     localStorage.setItem('jiese_completed', JSON.stringify(completedDays));
 
-    // 标记今天已打卡
     lastCheckinDate = today;
     localStorage.setItem('last_checkin_date', lastCheckinDate);
 
-    // 进入下一天
     currentDay++;
     localStorage.setItem('jiese_day', currentDay);
     renderApp();
