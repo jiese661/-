@@ -98,7 +98,7 @@
       transform: rotate(-90deg);
     }
     
-    /* 任务内容区域，默认显示 */
+    /* 任务内容区域 */
     .task-body {
       transition: all 0.3s ease;
       overflow: hidden;
@@ -222,8 +222,8 @@
         <span class="arrow">▼</span>
       </div>
       
-      <!-- 任务内容区域，可折叠 -->
-      <div class="task-body" id="taskBody">
+      <!-- 任务内容区域，默认收起 -->
+      <div class="task-body collapsed" id="taskBody">
         <div class="task-list" id="taskList"></div>
         <button class="btn" id="completeDayBtn">✅ 完成今日所有任务，打卡</button>
         <button class="btn danger" id="resetBtn">😞 我破戒了，重置进度</button>
@@ -466,6 +466,10 @@
     }
 
     updateStreak();
+
+    // 默认折叠
+    phaseHeader.classList.add('collapsed');
+    taskBody.classList.add('collapsed');
   }
 
   // ========== 打卡 ==========
