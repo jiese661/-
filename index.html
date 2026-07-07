@@ -53,6 +53,10 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.05);
       border: 1px solid #ddd;
     }
+    .btn.danger {
+      background: #e74c3c; color: white;
+      box-shadow: 0 4px 12px rgba(231,76,60,0.3);
+    }
     .app-header {
       display: flex; justify-content: space-between; align-items: center;
       margin-bottom: 20px;
@@ -163,6 +167,8 @@
       <div id="phaseTitle" style="font-weight:600; margin-bottom:10px; color:#1e3c72;"></div>
       <div class="task-list" id="taskList"></div>
       <button class="btn" id="completeDayBtn">✅ 完成今日所有任务，打卡</button>
+      <!-- 破戒按钮 -->
+      <button class="btn danger" id="resetBtn">😞 我破戒了，重置进度</button>
       <p style="text-align:center; margin-top:10px; color:#888; font-size:13px;">
         已连续打卡 <span id="streakDays">0</span> 天
       </p>
@@ -277,17 +283,12 @@
 
   installBtn.addEventListener('click', async () => {
     if (deferredPrompt) {
-      // 安卓/支持PWA安装的浏览器：直接弹出系统安装框
       deferredPrompt.prompt();
       const { outcome } = await deferredPrompt.userChoice;
-      if (outcome === 'accepted') {
-        console.log('用户安装成功');
-      }
+      if (outcome === 'accepted') console.log('用户安装成功');
       deferredPrompt = null;
-      // 安装后隐藏按钮
       installFooter.classList.add('hidden');
     } else {
-      // iOS 或不支持自动弹出的环境：给出明确的操作指引
       const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent);
       if (isIOS) {
         alert('请点击浏览器底部中间的“分享”按钮（↑ 箭头），然后向左滑动找到“添加到主屏幕”并点击。');
@@ -345,7 +346,6 @@
       checkbox.checked = isChecked;
       if (!isChecked) allTodayTasksCompleted = false;
 
-      // 如果今天已经完成（存储中有记录），则禁用复选框防止修改
       if (isChecked) {
         checkbox.disabled = true;
       }
@@ -372,7 +372,6 @@
 
   // ========== 打卡 ==========
   document.getElementById('completeDayBtn').addEventListener('click', () => {
-    // 检查是否所有复选框都勾选
     const checkboxes = document.querySelectorAll('#taskList input[type="checkbox"]');
     let allChecked = true;
     checkboxes.forEach(cb => { if (!cb.checked) allChecked = false; });
@@ -382,7 +381,6 @@
       return;
     }
 
-    // 检查今天是否已经完成过（防止重复签到）
     let alreadyCompletedToday = true;
     checkboxes.forEach((cb, index) => {
       if (!completedDays.includes(`${currentDay}_${index}`)) {
@@ -395,7 +393,6 @@
       return;
     }
 
-    // 保存记录
     checkboxes.forEach((cb, index) => {
       const key = `${currentDay}_${index}`;
       if (!completedDays.includes(key)) {
@@ -404,11 +401,24 @@
     });
     localStorage.setItem('jiese_completed', JSON.stringify(completedDays));
 
-    // 进入下一天
     currentDay++;
     localStorage.setItem('jiese_day', currentDay);
     renderApp();
     alert(`🎉 恭喜！你已进入第 ${currentDay} 天，继续坚持！`);
+  });
+
+  // ========== 破戒重置 ==========
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if (confirm('确定要重置所有进度吗？\n\n这将清空所有打卡记录，天数回到第1天。')) {
+      // 清零
+      currentDay = 1;
+      completedDays = [];
+      localStorage.setItem('jiese_day', '1');
+      localStorage.setItem('jiese_completed', '[]');
+      // 重新渲染
+      renderApp();
+      alert('进度已重置。从第1天重新开始，你可以的！');
+    }
   });
 
   // ========== 连续打卡 ==========
