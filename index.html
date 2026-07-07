@@ -134,6 +134,26 @@
       cursor: pointer;
       box-shadow: 0 4px 12px rgba(43,123,214,0.3);
     }
+
+    .clock-display {
+      text-align: center;
+      margin-top: 15px;
+      font-size: 14px;
+      color: #666;
+      background: #f8fafd;
+      padding: 10px;
+      border-radius: 12px;
+    }
+    .clock-display .date {
+      font-weight: 600;
+      color: #1e3c72;
+      margin-bottom: 4px;
+    }
+    .clock-display .time {
+      font-size: 18px;
+      font-weight: 700;
+      color: #2b7bd6;
+    }
   </style>
 </head>
 <body>
@@ -171,6 +191,11 @@
       <p style="text-align:center; margin-top:10px; color:#888; font-size:13px;">
         已连续打卡 <span id="streakDays">0</span> 天
       </p>
+      <!-- 实时时间显示 -->
+      <div class="clock-display" id="clockDisplay">
+        <div class="date" id="dateText"></div>
+        <div class="time" id="timeText"></div>
+      </div>
     </div>
 
     <div id="emergencySection" class="section">
@@ -267,9 +292,33 @@
   // ========== 状态 ==========
   let currentDay = parseInt(localStorage.getItem('jiese_day') || '1');
   let completedDays = JSON.parse(localStorage.getItem('jiese_completed') || '[]');
-  // 新增：上次打卡的日期 (格式: YYYY-MM-DD)
   let lastCheckinDate = localStorage.getItem('last_checkin_date') || '';
   let clickGameCount = 0;
+
+  // ========== 实时时钟 ==========
+  function updateClock() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    const hours = String(now.getHours()).padStart(2, '0');
+    const minutes = String(now.getMinutes()).padStart(2, '0');
+    const seconds = String(now.getSeconds()).padStart(2, '0');
+    
+    document.getElementById('dateText').textContent = `${year}年${month}月${day}日`;
+    document.getElementById('timeText').textContent = `${hours}:${minutes}:${seconds}`;
+  }
+  setInterval(updateClock, 1000);
+  updateClock(); // 立即执行一次
+
+  // ========== 获取今天的日期字符串（用于比对） ==========
+  function getTodayString() {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = String(now.getMonth() + 1).padStart(2, '0');
+    const day = String(now.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  }
 
   // ========== 一键安装 ==========
   let deferredPrompt;
@@ -302,15 +351,6 @@
   window.addEventListener('appinstalled', () => {
     installFooter.classList.add('hidden');
   });
-
-  // ========== 获取今天的日期字符串 ==========
-  function getTodayString() {
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    return `${year}-${month}-${day}`;
-  }
 
   // ========== 界面切换 ==========
   document.getElementById('enterAppBtn').addEventListener('click', () => {
@@ -357,7 +397,7 @@
       checkbox.checked = isChecked;
       if (!isChecked) allTodayTasksCompleted = false;
 
-      // 如果任务已完成，或者今天已经打过卡（日期相同），禁止修改
+      // 如果已经完成，或者今天已经打过卡，复选框禁用
       if (isChecked || lastCheckinDate === today) {
         checkbox.disabled = true;
       }
@@ -371,7 +411,7 @@
     });
 
     const completeBtn = document.getElementById('completeDayBtn');
-    // 如果所有任务都已完成，或者今天已经打过卡，按钮禁用
+    // 如果所有任务已完成 或 今天已经打过卡，按钮禁用
     if (allTodayTasksCompleted || lastCheckinDate === today) {
       completeBtn.disabled = true;
       completeBtn.textContent = '✅ 今日已完成，明天继续加油';
@@ -395,13 +435,13 @@
     }
 
     const today = getTodayString();
-    // 检查今天是否已经打过卡
+    // 关键：检查今天是否已经打过卡
     if (lastCheckinDate === today) {
       alert('你今天已经打过卡了，明天再来吧！');
       return;
     }
 
-    // 再次检查任务是否已全部完成（双重保障）
+    // 双重检查任务完成状态
     let alreadyCompletedToday = true;
     checkboxes.forEach((cb, index) => {
       if (!completedDays.includes(`${currentDay}_${index}`)) {
@@ -423,7 +463,7 @@
     });
     localStorage.setItem('jiese_completed', JSON.stringify(completedDays));
 
-    // 记录今天已打卡
+    // 标记今天已打卡
     lastCheckinDate = today;
     localStorage.setItem('last_checkin_date', lastCheckinDate);
 
