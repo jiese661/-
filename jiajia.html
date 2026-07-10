@@ -172,10 +172,9 @@
   </div>
 
   <script>
-    // ✅ 已填好的密钥，直接可用
+    // ========== Supabase 配置（只有这一处初始化，不要重复） ==========
     const SUPABASE_URL = 'https://ojnyiyxnumfdmmelqgmw.supabase.co';
     const SUPABASE_KEY = 'sb_publishable_BljRrH1luBU7tmi5SgBucw_YGMnyyni';
-
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
     // ========== 加载所有数据 ==========
